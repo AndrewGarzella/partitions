@@ -1,86 +1,152 @@
-fn main() {
-    for _i in 0..101 {
-        println!("{} partitions found for {}", partitions_for_num(_i), _i);
-    }
+use std::time::Instant;
+
+fn main() {    
+    let before = Instant::now();
+    println!("{} partitions in 100", partitions_for_num(100, true));
+    println!("Elapsed time: {:.2?}", before.elapsed());
 }
 
-fn partitions_for_num(num: usize) -> usize {
-    if num == 0 {
-        return 0;
-    }
-    if num == 1 { 
-        return 1;
-    }
-    if num == 2 { 
-        return 2;
-    }
-
-    let mut parts: Vec<usize> = vec![0;num];
-    parts[0] = num;
-
-    let mut solutions: Vec<Vec<usize>> = Vec::new();
-
-    solutions.push(parts.clone());
-
-    loop {
-
-        // if first number in parts is a 1 then pushes to solutions and end loop
-        if parts[0] == 1 {
-            break;
+fn partitions_for_num(num: usize, print_solutions: bool) -> usize {
+    if print_solutions {
+        if num == 0 {
+            println!("There are no partions for zero");
+            return 0;
+        }
+        if num == 1 { 
+            print!("Solution 1: 1 ");
+            return 1;
+        }
+        if num == 2 { 
+            println!("Solution 1: 1 1\nSolution 2: 2 0");
+            return 2;
         }
 
-        let mut needs_compresion: bool = false;
-     
-        
-        let mut compress_at = 1;
-        for _i in 0..parts.len() {
-            if parts[_i] == 1 {
-                compress_at = _i - 1;
-                needs_compresion = true;
+        let mut parts: Vec<usize> = vec![0;num];
+        parts[0] = num;
+
+        let mut solutions: Vec<Vec<usize>> = Vec::new();
+
+        solutions.push(parts.clone());
+
+        loop {
+
+            // if first number in parts is a 1 then pushes to solutions and end loop
+            if parts[0] == 1 {
                 break;
             }
-        }
+
+            let mut needs_compresion: bool = false;
         
-        if needs_compresion  {
-            let mut prev = 0;
-            for _i in 0..compress_at {
-                prev = prev + parts[_i];
+            
+            let mut compress_at = 1;
+            for _i in 0..parts.len() {
+                if parts[_i] == 1 {
+                    compress_at = _i - 1;
+                    needs_compresion = true;
+                    break;
+                }
+            }
+            
+            if needs_compresion  {
+                let mut prev = 0;
+                for _i in 0..compress_at {
+                    prev = prev + parts[_i];
+                }
+
+                parts = compress(parts, compress_at, num - prev);
+
+            } else {
+                for _i in (0..parts.len()).rev() {
+                    if parts[_i-1] > parts[_i] && parts[_i-1] - 1 != 0 {    
+                        parts[_i] += 1;                    
+                        parts[_i-1] -= 1;
+                        break;      
+                    } 
+                }
+            }
+            
+            //checks if parts adds up to a solutions
+            let mut temp = 0;
+            for _i in 0..parts.len()  {
+                temp = temp + parts[_i];
             }
 
-            parts = compress(parts, compress_at, num - prev);
-
-        } else {
-            for _i in (0..parts.len()).rev() {
-                if parts[_i-1] > parts[_i] && parts[_i-1] - 1 != 0 {    
-                    parts[_i] += 1;                    
-                    parts[_i-1] -= 1;
-                    break;      
-                } 
+            //adds to solutions 
+            if temp == num{
+                solutions.push(parts.clone());
             }
         }
-        
-        //checks if parts adds up to a solutions
-        let mut temp = 0;
-        for _i in 0..parts.len()  {
-            temp = temp + parts[_i];
+
+        // prints soluionts 
+        for _i in 0..solutions.len() {
+            print!("Solution {}: ", _i + 1);
+            for _j in 0..solutions[_i].len() {
+                print!("{} ", solutions[_i][_j]);
+            }
+            println!("");
+        }
+        return solutions.len();
+    } else {
+        if num == 0 {
+            return 0;
+        }
+        if num == 1 { 
+            return 1;
+        }
+        if num == 2 { 
+            return 2;
         }
 
-        //adds to solutions 
-        if temp == num{
-            solutions.push(parts.clone());
+        let mut parts: Vec<usize> = vec![0;num];
+        parts[0] = num;
+        let mut solutions: usize = 0;
+
+        solutions += 1;
+
+        loop {
+
+            // if first number in parts is a 1 then pushes to solutions and end loop
+            if parts[0] == 1 {
+                break;
+            }
+
+            let mut needs_compresion: bool = false;
+        
+            
+            let mut compress_at = 1;
+            for _i in 0..parts.len() {
+                if parts[_i] == 1 {
+                    compress_at = _i - 1;
+                    needs_compresion = true;
+                    break;
+                }
+            }
+            
+            if needs_compresion  {
+                let mut prev = 0;
+                for _i in 0..compress_at {
+                    prev = prev + parts[_i];
+                }
+
+                parts = compress(parts, compress_at, num - prev);
+
+            } else {
+                for _i in (0..parts.len()).rev() {
+                    if parts[_i-1] > parts[_i] && parts[_i-1] - 1 != 0 {    
+                        parts[_i] += 1;                    
+                        parts[_i-1] -= 1;
+                        break;      
+                    } 
+                }
+            }
+            //adds to solutions 
+            solutions += 1;
         }
+
+        return solutions;
+
     }
 
-    // prints soluionts 
-    // for _i in 0..solutions.len() {
-    //     print!("Solution {}: ", _i);
-    //     for _j in 0..solutions[_i].len() {
-    //         print!("{} ", solutions[_i][_j]);
-    //     }
-    //     println!("");
-    // }
-
-    return solutions.len();
 }
 
 fn compress(list: Vec<usize>,start: usize, total: usize) -> Vec<usize> {
